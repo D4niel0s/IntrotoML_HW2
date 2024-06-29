@@ -1,5 +1,5 @@
 #################################
-# Your name:
+# Your name: Daniel Volkov
 #################################
 
 import numpy as np
