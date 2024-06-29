@@ -56,6 +56,89 @@ class Assignment2(object):
         return np.transpose(emp_errs,true_errs)
 
 
+    def experiment_k_range_erm(self, m, k_first, k_last, step):
+        theRange = range(k_first,k_last+1,step)
+
+        emp_errs = np.zeros(len(theRange))
+        true_errs = np.zeros(len(theRange))
+
+        S = self.sample_from_D(m)
+
+        i=0
+        for k in theRange:
+            interv ,err_cnt = intervals.find_best_interval(S[:,0],S[:,1],k)
+
+            emp_errs[i] = float(err_cnt)/float(m)
+            true_errs[i] = self.ComputeTrueErr(interv)
+
+            i += 1
+        
+        plt.plot(theRange, emp_errs,color="blue",label="Empirical error")
+        plt.plot(theRange, true_errs,color="red",label="True error")
+        plt.title("True and empirical error(s) of ERM(S_n) as a function of k")
+        plt.xlabel("k")
+        plt.ylabel("Error")
+        plt.legend()
+        plt.show()
+
+        return theRange[np.argmin(emp_errs)]
+
+    def experiment_k_range_srm(self, m, k_first, k_last, step):
+        theRange = np.array(range(k_first,k_last+1,step))
+        deltak = (0.1/np.power(theRange,2))
+        penalty = 2*np.sqrt((2*theRange + np.log((2)/(deltak)))/(m))
+        
+
+        emp_errs = np.zeros(len(theRange))
+        true_errs = np.zeros(len(theRange))
+
+        S = self.sample_from_D(m)
+
+        i=0
+        for k in theRange:
+            interv ,err_cnt = intervals.find_best_interval(S[:,0],S[:,1],k)
+
+            emp_errs[i] = float(err_cnt)/float(m)
+            true_errs[i] = self.ComputeTrueErr(interv)
+
+            i += 1
+        
+        plt.plot(theRange, emp_errs,color="blue",label="Empirical error")
+        plt.plot(theRange, true_errs,color="red",label="True error")
+        plt.plot(theRange, penalty,color="orange",label="Penalty")
+        plt.plot(theRange, penalty+emp_errs,color="green",label="Penalty + Emp. error")
+        plt.title("SRM penalty + empirical error, with true and emp. errors")
+        plt.xlabel("k")
+        plt.ylabel("Error")
+        plt.legend()
+        plt.show()
+
+        return theRange[np.argmin(penalty+emp_errs)]
+
+    def cross_validation(self, m):
+        train_set = self.sample_from_D(int(0.8*m))
+        holdout_set = self.sample_from_D(int(0.2*m))
+
+        models = [0 for i in range(1,11)]
+        holdout_errs = np.zeros(10)
+        for k in range(1,11):
+            models[k-1], _ = intervals.find_best_interval(train_set[:,0],train_set[:,1],k)
+        for i in range(1,11):
+            holdout_errs[i-1] = self.ComputeEmpErr(models[i-1], holdout_set)
+
+        plt.plot(np.arange(1,11), holdout_errs, color="red", label="Validation error")
+        plt.xlabel("k")
+        plt.ylabel("Error")
+        plt.title("Validation error as a function of k")
+        plt.legend()
+        plt.show()
+
+        return models[np.argmin(holdout_errs)], np.argmin(holdout_errs)+1
+
+    #################################
+    # Place for additional methods
+
+
     #Computes the true error of a given hypothesis using the formula I derived in the PDF
     def ComputeTrueErr(self,intervals):
         SI0 = 0.6
@@ -100,69 +183,33 @@ class Assignment2(object):
 
         return S
 
+    #Computes the empirical error of a given hypothesis on a given dataset
+    def ComputeEmpErr(self,interv, set):
+        err_cnt = 0
 
-    def experiment_k_range_erm(self, m, k_first, k_last, step):
-        theRange = range(k_first,k_last+1,step)
+        for i in range(len(set)):
+            if(self.classify(interv, set[i][0]) != set[i][1]):
+                err_cnt += 1
 
-        emp_errs = np.zeros(len(theRange))
-        true_errs = np.zeros(len(theRange))
+        return float(err_cnt)/float(len(set))
 
-        S = self.sample_from_D(m)
-
-        i=0
-        for k in theRange:
-            interv ,err_cnt = intervals.find_best_interval(S[:,0],S[:,1],k)
-
-            emp_errs[i] = float(err_cnt)/float(m)
-            true_errs[i] = self.ComputeTrueErr(interv)
-            print("Finished iter:",i)
-            i += 1
+    #Classifies a given sample with the hypothesis given by interv
+    def classify(self,interv, sample):
+        for i in interv:
+            if (i[0]<=sample and sample <= i[1]):
+                return 1
+        return 0
         
-        plt.plot(theRange, emp_errs,color="blue",label="Empirical error")
-        plt.plot(theRange, true_errs,color="red",label="True error")
-        plt.title("True and empirical error(s) of ERM(S_n) as a function of k")
-        plt.xlabel("k")
-        plt.ylabel("Error")
-        plt.legend()
-        plt.show()
 
-
-        return theRange[np.argmin(emp_errs)]
-
-    def experiment_k_range_srm(self, m, k_first, k_last, step):
-        """Run the experiment in (c).
-        Plots additionally the penalty for the best ERM hypothesis.
-        and the sum of penalty and empirical error.
-        Input: m - an integer, the size of the data sample.
-               k_first - an integer, the maximum number of intervals in the first experiment.
-               m_last - an integer, the maximum number of intervals in the last experiment.
-               step - an integer, the difference between the size of k in each experiment.
-
-        Returns: The best k value (an integer) according to the SRM algorithm.
-        """
-        # TODO: Implement the loop
-        pass
-
-    def cross_validation(self, m):
-        """Finds a k that gives a good test error.
-        Input: m - an integer, the size of the data sample.
-
-        Returns: The best k value (an integer) found by the cross validation algorithm.
-        """
-        # TODO: Implement me
-        pass
-
-    #################################
-    # Place for additional methods
 
 
     #################################
-
 
 if __name__ == '__main__':
     ass = Assignment2()
-    bestk=ass.experiment_k_range_erm(1500,1,10,1)
-    print(bestk)
+    bestHyp, bestK = ass.cross_validation(1500)
+    print("best k:",bestK)
+    print("best hypothesis:",bestHyp)
     '''
     ass.experiment_m_range_erm(10, 100, 5, 3, 100)
     ass.experiment_k_range_erm(1500, 1, 10, 1)
