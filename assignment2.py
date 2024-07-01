@@ -45,6 +45,7 @@ class Assignment2(object):
         emp_errs /= T
         true_errs /= T
         
+        plt.figure(1)
         plt.plot(theRange, emp_errs,color="blue",label="Empirical error")
         plt.plot(theRange, true_errs,color="red",label="True error")
         plt.title("True and empirical error(s) of ERM(S_n) as a function of n")
@@ -53,7 +54,7 @@ class Assignment2(object):
         plt.legend()
         plt.show()
 
-        return np.transpose(emp_errs,true_errs)
+        return np.transpose((emp_errs,true_errs))
 
 
     def experiment_k_range_erm(self, m, k_first, k_last, step):
@@ -73,6 +74,7 @@ class Assignment2(object):
 
             i += 1
         
+        plt.figure(2)
         plt.plot(theRange, emp_errs,color="blue",label="Empirical error")
         plt.plot(theRange, true_errs,color="red",label="True error")
         plt.title("True and empirical error(s) of ERM(S_n) as a function of k")
@@ -103,6 +105,7 @@ class Assignment2(object):
 
             i += 1
         
+        plt.figure(3)
         plt.plot(theRange, emp_errs,color="blue",label="Empirical error")
         plt.plot(theRange, true_errs,color="red",label="True error")
         plt.plot(theRange, penalty,color="orange",label="Penalty")
@@ -126,6 +129,7 @@ class Assignment2(object):
         for i in range(1,11):
             holdout_errs[i-1] = self.ComputeEmpErr(models[i-1], holdout_set)
 
+        plt.figure(4)
         plt.plot(np.arange(1,11), holdout_errs, color="red", label="Validation error")
         plt.xlabel("k")
         plt.ylabel("Error")
@@ -207,13 +211,7 @@ class Assignment2(object):
 
 if __name__ == '__main__':
     ass = Assignment2()
-    bestHyp, bestK = ass.cross_validation(1500)
-    print("best k:",bestK)
-    print("best hypothesis:",bestHyp)
-    '''
     ass.experiment_m_range_erm(10, 100, 5, 3, 100)
     ass.experiment_k_range_erm(1500, 1, 10, 1)
     ass.experiment_k_range_srm(1500, 1, 10, 1)
     ass.cross_validation(1500)
-    '''
-
